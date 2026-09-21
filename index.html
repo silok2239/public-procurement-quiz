@@ -1,0 +1,41 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#102a43"><link rel="manifest" href="manifest.json">
+<title>공공조달관리사 3,000 문제은행</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f7fa;color:#17202a;font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif}
+header{background:#102a43;color:#fff;padding:18px 16px;position:sticky;top:0;z-index:5}header h1{font-size:19px;margin:0 0 6px}header small{opacity:.8}
+main{max-width:720px;margin:auto;padding:14px}.card{background:#fff;border-radius:16px;padding:18px;margin:12px 0;box-shadow:0 2px 10px #0000000d}
+select,button{font:inherit;border-radius:12px;padding:12px;border:1px solid #d7dee6;background:#fff}button{cursor:pointer}
+.primary{background:#102a43;color:#fff;border:0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.full{width:100%}
+.option{display:block;width:100%;text-align:left;margin:9px 0;background:#fff}.option.correct{background:#e7f6ed;border-color:#55a77a}.option.wrong{background:#fdeaea;border-color:#d66}
+.expl{background:#f7f9fb;border-left:4px solid #102a43;padding:12px;border-radius:8px;line-height:1.65}.muted{color:#697586}
+.tag{display:inline-block;padding:4px 8px;border-radius:999px;background:#e9eef5;font-size:12px;margin-right:5px}.big{font-size:28px;font-weight:800}
+.bar{height:8px;background:#e5eaf0;border-radius:99px;overflow:hidden}.bar>i{display:block;height:100%;background:#f08a24}
+.hidden{display:none}.nav{display:flex;gap:8px;margin-top:12px}.nav button{flex:1}
+</style></head><body><header><h1>공공조달관리사 1차 필기</h1><small>3과목 · 3,000문항 · 초급 학습형</small></header>
+<main><section id="home" class="card"><div class="big">문제로 공부하기</div>
+<p class="muted">정답보다 해설을 읽고 개념을 익히는 방식입니다.</p>
+<select id="subject" class="full"><option value="all">전체 3,000문항</option>
+<option>제1과목 공공조달과 법제도 이해</option><option>제2과목 공공조달계획 수립 및 분석</option><option>제3과목 공공계약관리</option></select>
+<div class="grid" style="margin-top:10px"><button class="primary" onclick="start(false)">순서대로 풀기</button><button onclick="start(true)">랜덤 풀기</button></div>
+<div class="grid" style="margin-top:9px"><button onclick="reviewWrong()">틀린 문제</button><button onclick="showStats()">학습 기록</button></div></section>
+<section id="quiz" class="card hidden"></section><section id="stats" class="card hidden"></section></main>
+<script>
+let data=[],pool=[],idx=0,score=0,answered=false,wrong=JSON.parse(localStorage.wrong||"[]"),seen=JSON.parse(localStorage.seen||"{}");
+fetch("questions.json").then(r=>r.json()).then(x=>data=x);
+const $=id=>document.getElementById(id); const esc=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+function save(){localStorage.wrong=JSON.stringify(wrong);localStorage.seen=JSON.stringify(seen)}
+function key(x){return x.subject+"|"+x.n}
+function start(random){let s=$("subject").value;pool=data.filter(x=>s==="all"||x.subject===s);if(random)pool.sort(()=>Math.random()-.5);idx=0;score=0;show("quiz");render()}
+function render(){if(idx>=pool.length){finish();return}let x=pool[idx];answered=false;$("quiz").innerHTML=`<span class="tag">${x.subject}</span><span class="tag">${idx+1} / ${pool.length}</span><div class="bar" style="margin:10px 0"><i style="width:${idx/pool.length*100}%"></i></div><h2 style="font-size:18px;line-height:1.5">${esc(x.q)}</h2><div>${x.o.map((o,i)=>`<button class="option" onclick="answer(${i})">${"①②③④"[i]} ${esc(o)}</button>`).join("")}</div><div id="feedback"></div>`}
+function answer(i){if(answered)return;answered=true;let x=pool[idx];seen[x.subject]=(seen[x.subject]||0)+1;document.querySelectorAll(".option").forEach((b,k)=>{if(k===x.a)b.classList.add("correct");if(k===i&&i!==x.a)b.classList.add("wrong")});if(i===x.a)score++;else if(!wrong.includes(key(x)))wrong.push(key(x));save();$("feedback").innerHTML=`<div class="expl"><b>${i===x.a?"정답입니다.":"정답: "+("①②③④"[x.a])}</b><br>${esc(x.e)}<br><br><b>초급 학습 포인트</b><br>${esc(x.t)}</div><div class="nav"><button onclick="idx++;render()">다음 문제 →</button><button onclick="goHome()">그만 풀기</button></div>`}
+function finish(){$("quiz").innerHTML=`<div class="big">학습 완료</div><p>${pool.length}문제 중 <b>${score}</b>문제 정답</p><button class="primary full" onclick="goHome()">메인으로</button>`}
+function reviewWrong(){pool=data.filter(x=>wrong.includes(key(x)));if(!pool.length){alert("아직 틀린 문제가 없습니다.");return}idx=0;score=0;show("quiz");render()}
+function showStats(){show("stats");let total=Object.values(seen).reduce((a,b)=>a+b,0);$("stats").innerHTML=`<h2>학습 기록</h2><p>총 풀이: <b>${total}</b></p><p>누적 오답: <b>${wrong.length}</b></p><button class="primary full" onclick="goHome()">메인으로</button>`}
+function show(id){["home","quiz","stats"].forEach(x=>$(x).classList.toggle("hidden",x!==id))}function goHome(){show("home")}
+</script><script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js').catch(()=>{}));
+}
+</script></body></html>

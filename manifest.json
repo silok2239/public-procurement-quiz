@@ -1,0 +1,10 @@
+{
+  "name": "공공조달관리사 3,000문항",
+  "short_name": "조달관리사",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0b1f3a",
+  "description": "공공조달관리사 필기시험 3과목 3,000문항 학습 앱",
+  "icons": []
+}
